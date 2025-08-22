@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Valeur carte Pokémon – Cardmarket (JSON, sans API)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Valeur carte (Cardmarket) – JSON, sans API</h1>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="row">
+        <label>Nom de la carte (optionnel)
+          <input id="name" placeholder="Ex. Dracaufeu ou Charizard" />
+        </label>
+        <label>Extension
+          <select id="expansionSelect">
+            <option value="">Toutes les extensions</option>
+          </select>
+        </label>
+      </div>
+      <div class="row">
+        <label style="align-self:center">
+          
+        </label>
+        <div class="actions">
+          <button id="btnSearch">Obtenir la valeur</button>
+          <button id="btnClear" class="secondary">Effacer</button>
+        </div>
+      </div>
+      <small class="muted">
+        Astuce : extension seule = toutes les cartes du set. Nom + extension = filtre plus précis.
+      </small>
+    </section>
+
+    <section id="out"></section>
+
+    <p id="dsInfo" style="display:none;"></p>
+
+  </main>
+
+  <footer>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

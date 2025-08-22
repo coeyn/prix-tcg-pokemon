@@ -1,0 +1,358 @@
+:root {
+    --bg: #0b1020;
+    --panel: #121a35;
+    --text: #e9eef9;
+    --muted: #a7b0c6;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto;
+}
+
+header {
+    padding: 18px 16px;
+    text-align: center;
+    background: linear-gradient(180deg, #121a35, #0b1020);
+    border-bottom: 1px solid #1e2a55;
+}
+
+h1 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.sub {
+    color: var(--muted);
+    margin-top: 6px;
+}
+
+main {
+    max-width: 980px;
+    margin: 20px auto;
+    padding: 0 16px;
+}
+
+.card {
+    background: var(--panel);
+    border: 1px solid #24346b;
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 12px;
+}
+
+.row {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 8px;
+    align-items: end;
+}
+
+label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.top .badge {
+    flex-direction: row;
+}
+
+input,
+select,
+button {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #2b3c7a;
+    background: #0e1430;
+    color: var(--text);
+}
+
+button {
+    cursor: pointer;
+}
+
+button.secondary {
+    background: #16203f;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+.muted {
+    color: var(--muted);
+}
+
+.kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.kpi {
+    background: #0e1430;
+    border: 1px solid #24346b;
+    border-radius: 10px;
+    padding: 12px;
+}
+
+.kpi .v {
+    font-size: 18px;
+    font-weight: 800;
+    margin-top: 4px;
+}
+
+.err {
+    background: #2b1b1b;
+    border-color: #7a2b2b;
+    color: #ffd9d9;
+}
+
+.list {
+    display: grid;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.line {
+    background: #0e1430;
+    border: 1px solid #24346b;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 12px;
+}
+
+.line .top {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.badge {
+    background: #1a244d;
+    border: 1px solid #2b3c7a;
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 12px;
+    color: #cfe0ff;
+}
+
+.meta {
+    color: #cbd3ea;
+    font-size: 13px;
+}
+
+@media (max-width:780px) {
+    .row {
+        grid-template-columns: 1fr;
+    }
+
+    .kpis {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* === Price UI refresh === */
+.prices {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.price-tile {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    /* centre vertical */
+    align-items: center;
+    /* centre horizontal */
+    background: linear-gradient(180deg, #0d1535, #0a112b);
+    border: 1px solid #263a7a;
+    border-radius: 12px;
+    padding: 10px;
+    min-height: 90px;
+    /* donne de la place à la tuile */
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+
+.price-tile .k {
+    font-size: 15px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #aeb8d8;
+}
+
+.price-tile .v {
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    font-size: 30px;
+    margin-top: 4px;
+    text-align: center;
+}
+
+
+.tile-trend {
+    border-color: #3a5fe0;
+    background: linear-gradient(180deg, #0f1d54, #0a112b);
+}
+
+.tile-mini {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.mini-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    background: #0f1738;
+    border: 1px solid #2b3e82;
+    color: #dbe5ff;
+}
+
+.chip.up {
+    background: rgba(26, 148, 90, .15);
+    border-color: #2a7a4b;
+}
+
+.chip.down {
+    background: rgba(190, 40, 40, .15);
+    border-color: #7a2b2b;
+}
+
+.chip .arr {
+    font-weight: 800;
+    opacity: .9;
+}
+
+.pct {
+    opacity: .85;
+    font-variant-numeric: tabular-nums;
+}
+
+.cm-btn {
+    display: inline-block;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid #2b3c7a;
+    background: #0d1535;
+    color: #e9eef9;
+    text-decoration: none;
+}
+
+.cm-btn:hover {
+    background: #121f4a;
+}
+
+.verdict {
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+.verdict.up {
+    color: #7ff0b8;
+    background: rgba(26, 148, 90, .12);
+    border: 1px solid #2a7a4b;
+    text-align: center;
+}
+
+.verdict.down {
+    color: #ffb3b3;
+    background: rgba(190, 40, 40, .12);
+    border: 1px solid #7a2b2b;
+}
+
+.verdict.muted {
+    color: #c5cce3;
+    background: #0f1738;
+    border: 1px solid #2b3e82;
+}
+
+/* tooltips ? */
+.tt {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    margin-left: 6px;
+    cursor: help;
+}
+
+.tt .q {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid #2b3e82;
+  background: #0f1738;
+  color: #dbe5ff;
+  padding-left: 1px;
+}
+
+
+
+.tt .bubble {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 140%;
+    min-width: 220px;
+    max-width: 280px;
+    background: #0b1026;
+    color: #e9eef9;
+    border: 1px solid #2b3e82;
+    padding: 8px 10px;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .35);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .15s ease;
+    z-index: 50;
+    font-size: 12px;
+}
+
+.tt .bubble::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #2b3e82;
+}
+
+.tt:hover .bubble,
+.tt:focus .bubble,
+.tt:focus-within .bubble {
+    opacity: 1;
+    pointer-events: auto;
+}
