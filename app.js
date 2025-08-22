@@ -394,7 +394,9 @@ function priceTilesHTML(pr) {
 }
 
 // ===== TCGdex (images, sans clé) =====
-const TCGDEX_LANG = "en";
+// API en EN pour les ids stables, mais on préfère les ASSETS en FR
+const TCGDEX_LANG = "en";          // pour /v2/en/sets...
+const TCGDEX_ASSET_LANG = "fr";    // pour les images (fr -> fallback en)
 const tcgdex = {
   sets: null,
   setIdByName: new Map(),
@@ -534,27 +536,59 @@ function renderResult(items) {
     if (slot) {
       const data = await fetchCardImage(nameEN, expName);
       if (data?.image) {
-        const base = data.image;
-        const lowWebp = tcgdexCardImg(base, "low", "webp");
-        const highWebp = tcgdexCardImg(base, "high", "webp");
-        const lowPng = tcgdexCardImg(base, "low", "png");
-        const highPng = tcgdexCardImg(base, "high", "png");
+  const base = data.image; // ex: https://assets.tcgdex.net/en/series/set/123
+  // Construit la version FR en priorité, sinon EN
+  const baseFR = base.replace(/\/(en|de|es|it|pt|ja|ko|zh)\//, `/${TCGDEX_ASSET_LANG}/`);
+  const baseEN = base.replace(/\/(fr|de|es|it|pt|ja|ko|zh)\//, "/en/");
 
-        slot.innerHTML = `
+  const urls = {
+    frWebpLow:  tcgdexCardImg(baseFR, "low",  "webp"),
+    frWebpHigh: tcgdexCardImg(baseFR, "high", "webp"),
+    enWebpLow:  tcgdexCardImg(baseEN, "low",  "webp"),
+    enWebpHigh: tcgdexCardImg(baseEN, "high", "webp"),
+    frPngLow:   tcgdexCardImg(baseFR, "low",  "png"),
+    frPngHigh:  tcgdexCardImg(baseFR, "high", "png"),
+    enPngLow:   tcgdexCardImg(baseEN, "low",  "png"),
+    enPngHigh:  tcgdexCardImg(baseEN, "high", "png"),
+  };
+
+  slot.innerHTML = `
     <a href="https://api.tcgdex.net/v2/${TCGDEX_LANG}/cards/${encodeURIComponent(data.cardId)}"
        target="_blank" rel="noopener">
       <img
-        src="${lowWebp}"
-        srcset="${lowWebp} 1x, ${highWebp} 2x"
+        data-stage="fr-webp"
+        src="${urls.frWebpLow}"
+        srcset="${urls.frWebpLow} 1x, ${urls.frWebpHigh} 2x"
         alt="${nameEN}"
         loading="lazy"
-        onerror="this.onerror=null; this.src='${lowPng}'; this.srcset='${lowPng} 1x, ${highPng} 2x';"
       />
     </a>
   `;
-      } else {
-        slot.innerHTML = `<div class="thumb-nope">—</div>`;
-      }
+
+  // Fallbacks progressifs: fr-webp -> en-webp -> fr-png -> en-png
+  const imgEl = slot.querySelector("img");
+  imgEl.addEventListener("error", function onErr() {
+    const stage = imgEl.getAttribute("data-stage");
+    if (stage === "fr-webp") {
+      imgEl.setAttribute("data-stage", "en-webp");
+      imgEl.src = urls.enWebpLow;
+      imgEl.srcset = `${urls.enWebpLow} 1x, ${urls.enWebpHigh} 2x`;
+    } else if (stage === "en-webp") {
+      imgEl.setAttribute("data-stage", "fr-png");
+      imgEl.src = urls.frPngLow;
+      imgEl.srcset = `${urls.frPngLow} 1x, ${urls.frPngHigh} 2x`;
+    } else if (stage === "fr-png") {
+      imgEl.setAttribute("data-stage", "en-png");
+      imgEl.src = urls.enPngLow;
+      imgEl.srcset = `${urls.enPngLow} 1x, ${urls.enPngHigh} 2x`;
+    } else {
+      imgEl.removeEventListener("error", onErr); // dernier fallback
+    }
+  });
+} else {
+  slot.innerHTML = `<div class="thumb-nope">—</div>`;
+}
+
 
     }
   });
