@@ -16,6 +16,11 @@ const norm = s =>
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "")
     .trim();
+function hashStr(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) | 0; }
+  return Math.abs(h);
+}
 
 // ===== State =====
 let singlesRows = [];        // data/products_singles_6.json
@@ -453,21 +458,29 @@ async function loadTcgdexSetCards(setId) {
   } catch { tcgdex.cardsBySetId.set(setId, []); return []; }
 }
 
-async function fetchCardImage(nameEN, expansionName) {
+async function fetchCardImage(nameEN, expansionName, pickerKey = "") {
   const setId = await resolveTcgdexSetId(expansionName);
   if (!setId) return null;
+
   const cards = await loadTcgdexSetCards(setId);
   const N = (nameEN || "").toLowerCase();
 
-  let hit = cards.find(c => (c.name || "").toLowerCase() === N);
-  if (!hit) hit = cards.find(c => (c.name || "").toLowerCase().includes(N));
-  if (!hit) {
-    const normName = x => (x || "").toLowerCase().replace(/[^a-z0-9 ]+/g, "").trim();
-    const nN = normName(nameEN);
-    hit = cards.find(c => normName(c.name) === nN || normName(c.name).includes(nN));
-  }
+  // candidates: toutes les cartes du set dont le nom matche
+  const norm = x => (x || "").toLowerCase().replace(/[^a-z0-9 ]+/g, "").trim();
+  const candidates = cards.filter(c => {
+    const n = (c.name || "").toLowerCase();
+    return n === N || n.includes(N) || norm(c.name) === norm(nameEN) || norm(c.name).includes(norm(nameEN));
+  });
+
+  if (!candidates.length) return null;
+
+  // Sélection stable d'une variante en fonction de pickerKey (ex: idProduct)
+  const idx = pickerKey ? hashStr(String(pickerKey)) % candidates.length : 0;
+  const hit = candidates[idx];
+
   return hit ? { image: hit.image, cardId: hit.id, localId: hit.localId, setId } : null;
 }
+
 
 // ===== UI rendering =====
 function renderResult(items) {
@@ -534,63 +547,58 @@ function renderResult(items) {
     const expName = expBadge ? expBadge.textContent.replace(/^Set:\s*/, "").trim() : "";
     const slot = line.querySelector(`.thumb[data-thumb-for="${id}"]`);
     if (slot) {
-      const data = await fetchCardImage(nameEN, expName);
+      const data = await fetchCardImage(nameEN, expName, id); // << passe idProduct comme pickerKey
       if (data?.image) {
-  const base = data.image; // ex: https://assets.tcgdex.net/en/series/set/123
-  // Construit la version FR en priorité, sinon EN
-  const baseFR = base.replace(/\/(en|de|es|it|pt|ja|ko|zh)\//, `/${TCGDEX_ASSET_LANG}/`);
-  const baseEN = base.replace(/\/(fr|de|es|it|pt|ja|ko|zh)\//, "/en/");
+        // (on garde ta construction d’URL FR/EN ici)
+        const base = data.image;
+        const baseFR = base.replace(/\/(en|de|es|it|pt|ja|ko|zh)\//, `/${TCGDEX_ASSET_LANG}/`);
+        const baseEN = base.replace(/\/(fr|de|es|it|pt|ja|ko|zh)\//, "/en/");
+        const urls = {
+          frWebpLow: tcgdexCardImg(baseFR, "low", "webp"),
+          frWebpHigh: tcgdexCardImg(baseFR, "high", "webp"),
+          enWebpLow: tcgdexCardImg(baseEN, "low", "webp"),
+          enWebpHigh: tcgdexCardImg(baseEN, "high", "webp"),
+          frPngLow: tcgdexCardImg(baseFR, "low", "png"),
+          frPngHigh: tcgdexCardImg(baseFR, "high", "png"),
+          enPngLow: tcgdexCardImg(baseEN, "low", "png"),
+          enPngHigh: tcgdexCardImg(baseEN, "high", "png"),
+        };
 
-  const urls = {
-    frWebpLow:  tcgdexCardImg(baseFR, "low",  "webp"),
-    frWebpHigh: tcgdexCardImg(baseFR, "high", "webp"),
-    enWebpLow:  tcgdexCardImg(baseEN, "low",  "webp"),
-    enWebpHigh: tcgdexCardImg(baseEN, "high", "webp"),
-    frPngLow:   tcgdexCardImg(baseFR, "low",  "png"),
-    frPngHigh:  tcgdexCardImg(baseFR, "high", "png"),
-    enPngLow:   tcgdexCardImg(baseEN, "low",  "png"),
-    enPngHigh:  tcgdexCardImg(baseEN, "high", "png"),
-  };
+        slot.innerHTML = `
+      <a href="https://api.tcgdex.net/v2/${TCGDEX_LANG}/cards/${encodeURIComponent(data.cardId)}"
+         target="_blank" rel="noopener" class="thumb-link">
+        <img
+          data-stage="fr-webp"
+          src="${urls.frWebpLow}"
+          srcset="${urls.frWebpLow} 1x, ${urls.frWebpHigh} 2x"
+          alt="${nameEN}"
+          loading="lazy"
+        />
+      </a>
+      
+    `;
 
-  slot.innerHTML = `
-    <a href="https://api.tcgdex.net/v2/${TCGDEX_LANG}/cards/${encodeURIComponent(data.cardId)}"
-       target="_blank" rel="noopener">
-      <img
-        data-stage="fr-webp"
-        src="${urls.frWebpLow}"
-        srcset="${urls.frWebpLow} 1x, ${urls.frWebpHigh} 2x"
-        alt="${nameEN}"
-        loading="lazy"
-      />
-    </a>
-  `;
-
-  // Fallbacks progressifs: fr-webp -> en-webp -> fr-png -> en-png
-  const imgEl = slot.querySelector("img");
-  imgEl.addEventListener("error", function onErr() {
-    const stage = imgEl.getAttribute("data-stage");
-    if (stage === "fr-webp") {
-      imgEl.setAttribute("data-stage", "en-webp");
-      imgEl.src = urls.enWebpLow;
-      imgEl.srcset = `${urls.enWebpLow} 1x, ${urls.enWebpHigh} 2x`;
-    } else if (stage === "en-webp") {
-      imgEl.setAttribute("data-stage", "fr-png");
-      imgEl.src = urls.frPngLow;
-      imgEl.srcset = `${urls.frPngLow} 1x, ${urls.frPngHigh} 2x`;
-    } else if (stage === "fr-png") {
-      imgEl.setAttribute("data-stage", "en-png");
-      imgEl.src = urls.enPngLow;
-      imgEl.srcset = `${urls.enPngLow} 1x, ${urls.enPngHigh} 2x`;
-    } else {
-      imgEl.removeEventListener("error", onErr); // dernier fallback
+        const imgEl = slot.querySelector("img");
+        imgEl.addEventListener("error", function onErr() {
+          const stage = imgEl.getAttribute("data-stage");
+          if (stage === "fr-webp") {
+            imgEl.setAttribute("data-stage", "en-webp");
+            imgEl.src = urls.enWebpLow; imgEl.srcset = `${urls.enWebpLow} 1x, ${urls.enWebpHigh} 2x`;
+          } else if (stage === "en-webp") {
+            imgEl.setAttribute("data-stage", "fr-png");
+            imgEl.src = urls.frPngLow; imgEl.srcset = `${urls.frPngLow} 1x, ${urls.frPngHigh} 2x`;
+          } else if (stage === "fr-png") {
+            imgEl.setAttribute("data-stage", "en-png");
+            imgEl.src = urls.enPngLow; imgEl.srcset = `${urls.enPngLow} 1x, ${urls.enPngHigh} 2x`;
+          } else {
+            imgEl.removeEventListener("error", onErr);
+          }
+        });
+      } else {
+        slot.innerHTML = `<div class="thumb-nope">—</div>`;
+      }
     }
-  });
-} else {
-  slot.innerHTML = `<div class="thumb-nope">—</div>`;
-}
 
-
-    }
   });
 }
 

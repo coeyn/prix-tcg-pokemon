@@ -420,3 +420,7 @@ button.secondary {
         aspect-ratio: 200 / 280;
     }
 }
+.thumb-link { display:block; }
+.thumb-id {
+  margin-top:6px; font-size:12px; color:#cbd3ea; text-align:center;
+}
